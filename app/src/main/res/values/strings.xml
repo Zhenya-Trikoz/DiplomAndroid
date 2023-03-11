@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Bluetooth</string>
+    <string name="enablebt">EnableBt</string>
+    <string name="searchbt">SearchBt</string>
+    <string name="status">Status:</string>
+    <string name="text">TEXT</string>
+    <string name="disablebt">DisableBt</string>
+</resources>
