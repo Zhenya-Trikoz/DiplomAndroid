@@ -5,4 +5,6 @@
     <string name="status">Status:</string>
     <string name="text">TEXT</string>
     <string name="disablebt">DisableBt</string>
+    <string name="mac_address">MAC-address</string>
+    <string name="name_device">Name device</string>
 </resources>
