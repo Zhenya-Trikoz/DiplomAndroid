@@ -2,21 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:title="Item"
-        android:id="@+id/id_bluetooth_search"
-        app:showAsAction="ifRoom"
-        android:icon="@drawable/ic_bluetooth_search"/>
-
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_static"
+        android:orderInCategory="1"
+        android:title="Статистика" />
+    <item
+        android:id="@+id/action_downloadStatistic"
         android:orderInCategory="2"
-        android:title="Настройки" />
-    <item
-        android:id="@+id/save_settings"
-        android:orderInCategory="4"
-        android:title="Сохранить" />
-    <item
-        android:id="@+id/open_settings"
-        android:orderInCategory="3"
-        android:title="Открыть" />
+        android:title="Скачати статистику" />
+
 </menu>

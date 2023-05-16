@@ -3,32 +3,47 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
+    <!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"/>
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/cat"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Bluetooth">
+        android:theme="@style/AppTheme">
         <activity
-            android:name=".Device"
-            android:exported="false" />
+            android:name=".timeTable.TimeTable"
+            android:exported="true" />
         <activity
-            android:name=".MainActivity"
+            android:name=".statistics.Static"
+            android:exported="true" />
+        <activity
+            android:name=".bluetooth.Bluetooth"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name=".alarmManager.BroadcastReceiverAlarmManager" />
+        <receiver android:name=".bluetooth.BroadcastReceiverServiceBluetooth"/>
+        <service android:name=".alarmManager.ServiceAlarmManager" />
+        <service android:name=".bluetooth.ServiceBluetooth"/>
     </application>
 
 </manifest>

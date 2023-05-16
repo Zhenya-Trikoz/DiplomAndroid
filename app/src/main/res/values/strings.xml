@@ -7,4 +7,7 @@
     <string name="disablebt">DisableBt</string>
     <string name="mac_address">MAC-address</string>
     <string name="name_device">Name device</string>
+    <string name="sizePortion">SizePortion</string>
+    <string name="time">Time</string>
+    <string name="repetition">Repetition:</string>
 </resources>

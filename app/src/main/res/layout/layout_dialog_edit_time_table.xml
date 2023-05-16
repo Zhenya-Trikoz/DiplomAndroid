@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/editTextSizePortion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="15"
+        android:hint="Введіть розмір порції"
+        android:inputType="number|numberDecimal"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        tools:ignore="TextFields" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Виберіть час годування"
+        android:textColor="#000000" />
+
+    <TimePicker
+        android:id="@+id/timePicker"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:timePickerMode="spinner" />
+
+    <Switch
+        android:id="@+id/switchRepetition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="48dp"
+        android:minHeight="48dp"
+        android:scrollbarSize="10dp"
+        android:text="Повторювати щотижня"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/buttonOk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/buttonColorIsNotSelect"
+        android:text="Button" />
+
+
+</LinearLayout>

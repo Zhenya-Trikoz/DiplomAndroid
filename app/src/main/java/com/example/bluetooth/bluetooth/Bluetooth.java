@@ -1,10 +1,4 @@
-package com.example.bluetooth;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+package com.example.bluetooth.bluetooth;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -12,20 +6,27 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.bluetooth.adapterBluetooth.BtAdapter;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.bluetooth.Const;
+import com.example.bluetooth.timeTable.TimeTable;
+import com.example.bluetooth.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +34,7 @@ import java.util.List;
 import pub.devrel.easypermissions.EasyPermissions;
 
 @SuppressLint("MissingPermission")
-public class MainActivity extends AppCompatActivity {
-
-
+public class Bluetooth extends AppCompatActivity {
     private TextView textViewStatusBt;
     private ListView listDeviceBt;
     //
@@ -54,6 +53,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         init();
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Const.ACTION_CONNECT_DEVICE);
+        intentFilter.addAction(Const.ACTION_ACCESS_PROVIDE);
+        intentFilter.addAction(Const.ACTION_ACCESS_NOT_PROVIDE);
+        registerReceiver(broadcastReceiverMainActivity, intentFilter);
+
         //Bluetooth ON
         if (!mBTAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -68,15 +73,95 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(MainActivity.this, Device.class);
 
-                intent.putExtra("device", list.get(position));
+                startServiceBluetooth("Connect bluetooth", list.get(position));
 
-                startActivity(intent);
+//                Intent intent = new Intent(Bluetooth.this, TimeTable.class);
+//                intent.putExtra("device", list.get(position));
+//
+//                startActivity(intent);
 
             }
         });
 
+    }
+
+    public void disconnect() {
+        Intent intent = new Intent(this, ServiceBluetooth.class);
+        intent.putExtra("command", "Disconnect");
+
+        startService(intent);
+
+    }
+
+    public void startServiceBluetooth(String command, BluetoothDevice device) {
+        Intent intent = new Intent(this, ServiceBluetooth.class);
+        intent.putExtra("command", command);
+        intent.putExtra("bluetooth_device", device);
+
+        startService(intent);
+
+    }
+
+    public void enterPassword() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Bluetooth.this);
+        builder.setTitle("Пароль");
+
+        View view = LayoutInflater.from(Bluetooth.this).inflate(R.layout.layout_dialog_password, null);
+        builder.setView(view);
+
+        EditText editText = view.findViewById(R.id.editTextPassword);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String password = editText.getText().toString();
+
+                if (password.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "Невірно введені дані, спробуйте знову", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(Const.ACTION_PASSWORD_SEND);
+                    intent.putExtra("password", password);
+                    sendBroadcast(intent);
+                }
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    public void passwordConfirmed() {
+        Log.d(Const.TAG, "Password access");
+        Intent intent = new Intent(this, TimeTable.class);
+        startActivity(intent);
+    }
+
+    private final BroadcastReceiver broadcastReceiverMainActivity = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(Const.ACTION_CONNECT_DEVICE)) {
+                enterPassword();
+            } else if (action.equals(Const.ACTION_ACCESS_PROVIDE)) {
+                passwordConfirmed();
+            } else if (action.equals(Const.ACTION_ACCESS_NOT_PROVIDE)) {
+                Toast.makeText(getApplicationContext(), "Пароль не правильний!\nСпробуйте знову.", Toast.LENGTH_SHORT).show();
+                disconnect();
+            }
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(broadcastReceiverMainActivity);
     }
 
     @Override
@@ -87,19 +172,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void discoveryDevice() {
-
-
         if (mBTAdapter.isEnabled()) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE_ACCESS_FINE_LOCATION);
-
-            }
+//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                ActivityCompat.requestPermissions(this, new Str
+//                ing[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE_ACCESS_FINE_LOCATION);
+//            }
 
             IntentFilter bluetoothFilter = new IntentFilter();
             bluetoothFilter.addAction(BluetoothDevice.ACTION_FOUND);
             bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-//            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
             registerReceiver(blReceiver, bluetoothFilter);
         }
         boolean ableToStartDiscovery = mBTAdapter.startDiscovery();
@@ -109,12 +191,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     BroadcastReceiver blReceiver = new BroadcastReceiver() {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
                 list.add(device);
                 btAdapter.notifyDataSetChanged();
             }
@@ -142,7 +224,9 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
 
         // создаем адаптер
@@ -151,10 +235,6 @@ public class MainActivity extends AppCompatActivity {
         listDeviceBt.setAdapter(btAdapter);
 
         configPermission();
-        //
-
-        //
-
 
     }
 
@@ -166,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // Enter here after user selects "yes" or "no" to enabling radio
     @SuppressLint("MissingSuperCall")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent Data) {
@@ -183,8 +262,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }

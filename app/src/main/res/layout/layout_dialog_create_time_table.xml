@@ -8,16 +8,11 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Налаштування розкладу" />
-
-    <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Виберіть дні тижня" />
+        android:text="Виберіть дні тижня"
+        android:textColor="#000000" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,84 +20,98 @@
         android:orientation="horizontal">
 
         <CheckBox
-            android:id="@+id/checkBox7"
+            android:id="@+id/checkBoxMonday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Пн" />
 
         <CheckBox
-            android:id="@+id/checkBox6"
+            android:id="@+id/checkBoxTuesday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Вт" />
 
         <CheckBox
-            android:id="@+id/checkBox5"
+            android:id="@+id/checkBoxWednesday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Ср" />
 
         <CheckBox
-            android:id="@+id/checkBox4"
+            android:id="@+id/checkBoxThursday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Чт" />
 
         <CheckBox
-            android:id="@+id/checkBox3"
+            android:id="@+id/checkBoxFriday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Пт" />
 
         <CheckBox
-            android:id="@+id/checkBox2"
+            android:id="@+id/checkBoxSaturday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Сб" />
 
         <CheckBox
-            android:id="@+id/checkBox"
+            android:id="@+id/checkBoxSunday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Нд" />
     </LinearLayout>
 
+    <Switch
+        android:id="@+id/switchRepetition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="48dp"
+        android:minHeight="48dp"
+        android:scrollbarSize="10dp"
+        android:text="Повторювати щотижня"
+        android:textSize="16sp" />
+
     <EditText
-        android:id="@+id/editTextTextPersonName"
+        android:id="@+id/editTextSizePortion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="15"
-        android:inputType="textPersonName"
-        android:text="Введіть розмір порції"
+        android:hint="Введіть розмір порції у грамах"
+        android:inputType="number|numberDecimal"
+        android:textColor="#000000"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.446"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        tools:ignore="TextFields" />
 
     <TextView
         android:id="@+id/textView5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Виберіть час годування" />
+        android:text="Виберіть час годування"
+        android:textColor="#000000" />
 
     <TimePicker
-        android:id="@+id/time_picker"
+        android:id="@+id/timePicker"
         android:layout_width="match_parent"
-        android:layout_height="177dp"
+        android:layout_height="180dp"
         android:timePickerMode="spinner" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/buttonOk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Зберегти" />
+        android:backgroundTint="@color/buttonColorIsNotSelect"
+        android:text="Додати графік" />
+
 
 </LinearLayout>

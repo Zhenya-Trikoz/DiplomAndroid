@@ -1,4 +1,4 @@
-package com.example.bluetooth.adapterBluetooth;
+package com.example.bluetooth.bluetooth;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
@@ -35,13 +35,12 @@ public class BtAdapter extends ArrayAdapter<BluetoothDevice> {
             viewHolder = new ViewHolder();
             convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.element_list_bluetooth_device, null, false);
 
-            viewHolder.textNameDevice = convertView.findViewById(R.id.textNameDevice);
-            viewHolder.textMacAddress = convertView.findViewById(R.id.textMacAddress);
+            viewHolder.textNameDevice = convertView.findViewById(R.id.textTime);
+            viewHolder.textMacAddress = convertView.findViewById(R.id.textSizePortion);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-
         viewHolder.textNameDevice.setText(list.get(position).getName());
         viewHolder.textMacAddress.setText(list.get(position).getAddress());
 
