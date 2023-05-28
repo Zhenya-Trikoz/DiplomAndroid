@@ -1,14 +1,11 @@
 package com.example.bluetooth.timeTable;
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,44 +24,45 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.bluetooth.Const;
 import com.example.bluetooth.DataRead_Write;
 import com.example.bluetooth.R;
-import com.example.bluetooth.statistics.Static;
 import com.example.bluetooth.alarmManager.BroadcastReceiverAlarmManager;
 import com.example.bluetooth.bluetooth.ServiceBluetooth;
 import com.example.bluetooth.dialog.DialogCreateTimeTable;
 import com.example.bluetooth.dialog.DialogEditTimeTable;
-import com.google.gson.Gson;
+import com.example.bluetooth.statistics.Static;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressLint("MissingPermission")
-public class TimeTable extends AppCompatActivity implements DataTransfer {
+public class TimeTable extends AppCompatActivity {
 
     private Button buttonMonday, buttonTuesday, buttonWednesday, buttonThursday, buttonFriday, buttonSaturday, buttonSunday;
     List<ListTimeTable> listTimeTables;
     List<ListTimeTable> buffListTimeTable;
     ListView listViewTimeTable;
     AdapterListTimeTable adapterListTimeTable;
-    /////
-
     Button buttonAddTimeTable;
     int buttonIsNotSelect;
-
+    private MenuItem menuItem;
+    boolean flagUploadData = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device);
 
-
         init();
 
-        buttonIsNotSelect = buttonMonday.getId();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Const.CreateListTimeTable);
+        intentFilter.addAction(Const.EditListTimeTable);
+        registerReceiver(broadcastReceiverTimeTable, intentFilter);
 
+        buttonIsNotSelect = buttonMonday.getId();
+        buttonMonday.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.buttonColorIsSelect)));
         buttonMonday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -76,7 +74,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
             @Override
             public void onClick(View v) {
                 buttonIsSelect(buttonIsNotSelect, buttonTuesday.getId());
-//                DataRead_Write.dataReadListTimeTable(getApplicationContext());
                 list("Вт");
             }
         });
@@ -106,7 +103,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
             public void onClick(View v) {
                 buttonIsSelect(buttonIsNotSelect, buttonSaturday.getId());
                 list("Сб");
-//                copyFile();
             }
         });
         buttonSunday.setOnClickListener(new View.OnClickListener() {
@@ -137,12 +133,10 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         listViewTimeTable.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                // створення діалогу підтвердження видалення
                 AlertDialog.Builder builder = new AlertDialog.Builder(TimeTable.this);
                 builder.setTitle("Підтвердження видалення");
                 builder.setMessage("Ви впевнені, що хочете видалити \"" + buffListTimeTable.get(position).getTime() + "\"?");
 
-                // додавання кнопки Позитивної відповіді
                 builder.setPositiveButton("Так", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -153,6 +147,8 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
                                 break;
                             }
                         }
+                        menuItem.setVisible(true);
+                        flagUploadData = true;
                         list(buffListTimeTable.get(position).getWeekDay());
                     }
                 });
@@ -189,7 +185,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         dialog.show();
     }
 
-    @Override
     public void createListTimeTable(List<String> list, boolean repetition, String sizePortion, String time) {
         int id = listTimeTables.size();
         for (String weekday : list) {
@@ -207,15 +202,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
             if (flag) {
                 listTimeTables.add(table);
             }
-        }
-
-        Intent intent = new Intent(this, BroadcastReceiverAlarmManager.class);
-        intent.setAction(Const.COMMAND_SERVICE_FINISH_TIMETABLE_TODAY);
-        for (int i = 0; i < listTimeTables.size(); i++) {
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, i, intent, PendingIntent.FLAG_IMMUTABLE);
-
-            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            alarmManager.cancel(pendingIntent);
         }
 
         sortListTimeTable();
@@ -248,7 +234,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         list(list.get(0));
     }
 
-    @Override
     public void editListTimeTable(int idElementListTimeTable, boolean repetition, String sizePortion, String time) {
         for (int i = 0; i < listTimeTables.size(); i++) {
             if (listTimeTables.get(i).getId() == idElementListTimeTable) {
@@ -303,7 +288,10 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
+        inflater.inflate(R.menu.menu_time_table, menu);
+
+        menuItem = menu.findItem(R.id.upload);
+
         return true;
     }
 
@@ -314,12 +302,14 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
             Intent intent = new Intent(TimeTable.this, Static.class);
             startActivity(intent);
             return true;
+        } else if (id == R.id.upload) {
+            menuItem.setVisible(false);
+
+            startServiceBluetooth("Send data");
+            flagUploadData = false;
         }
+
         return super.onOptionsItemSelected(item);
-    }
-
-    public void sendData() {
-
     }
 
     @Override
@@ -327,7 +317,6 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         super.onStop();
 
         Log.d(Const.TAG, "Activity Stop");
-
 
         saveData();
 
@@ -340,37 +329,15 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        startServiceBluetooth("Send data");
+
+        if (flagUploadData) {
+            startServiceBluetooth("Send data");
+        }
 
     }
 
     public void saveData() {
-//        String json = gson.toJson(listTimeTables);
-//        editor.putString(Const.PREF_LIST_TIME_TABLE, json);
-//        editor.apply();
-
         DataRead_Write.dataWriteListTimeTable(getApplicationContext(), listTimeTables);
-    }
-
-    public int getWeekDay(String weekDay) {
-
-        switch (weekDay) {
-            case "Пн":
-                return Calendar.MONDAY;
-            case "Вт":
-                return Calendar.TUESDAY;
-            case "Ср":
-                return Calendar.WEDNESDAY;
-            case "Чт":
-                return Calendar.THURSDAY;
-            case "Пт":
-                return Calendar.FRIDAY;
-            case "Сб":
-                return Calendar.SATURDAY;
-            case "Нд":
-                return Calendar.SUNDAY;
-        }
-        return 0;
     }
 
     public void init() {
@@ -395,6 +362,27 @@ public class TimeTable extends AppCompatActivity implements DataTransfer {
         list("Пн");
     }
 
+    BroadcastReceiver broadcastReceiverTimeTable = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(Const.CreateListTimeTable)) {
+                ArrayList<String> list = intent.getStringArrayListExtra("listCheckBox");
+                boolean repetition = intent.getBooleanExtra("repetition", false);
+                String sizePortion = intent.getStringExtra("sizePortion");
+                String time = intent.getStringExtra("time");
 
+                createListTimeTable(list, repetition, sizePortion, time);
+            } else if (action.equals(Const.EditListTimeTable)) {
+                int id = intent.getIntExtra("listCheckBox", -1);
+                boolean repetition = intent.getBooleanExtra("repetition", false);
+                String sizePortion = intent.getStringExtra("sizePortion");
+                String time = intent.getStringExtra("time");
 
+                editListTimeTable(id, repetition, sizePortion, time);
+            }
+            menuItem.setVisible(true);
+            flagUploadData = true;
+        }
+    };
 }

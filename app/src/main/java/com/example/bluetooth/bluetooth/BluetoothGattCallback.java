@@ -59,11 +59,11 @@ public class BluetoothGattCallback extends android.bluetooth.BluetoothGattCallba
         String value = new String(data, StandardCharsets.UTF_8);
         Log.d(Const.TAG, "BluetoothGatt data: " + value);
 
-        if (value.equals("c")) {
+        if (value.equals("C")) {
             intent = new Intent(Const.ACTION_CONNECT_DEVICE);
-        } else if (value.equals("p")) {
+        } else if (value.equals("P")) {
             intent = new Intent(Const.ACTION_ACCESS_PROVIDE);
-        } else if (value.equals("PN")) {
+        } else if (value.equals("NP")) {
             intent = new Intent(Const.ACTION_ACCESS_NOT_PROVIDE);
         } else {
             intent = new Intent(Const.ACTION_DATA_READ);

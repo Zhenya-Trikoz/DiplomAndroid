@@ -2,6 +2,7 @@ package com.example.bluetooth.dialog;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,12 +12,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.bluetooth.timeTable.DataTransfer;
+import com.example.bluetooth.Const;
 import com.example.bluetooth.R;
 import com.example.bluetooth.timeTable.ListTimeTable;
 
 public class DialogEditTimeTable extends Dialog {
-    private DataTransfer dataTransfer;
     private ListTimeTable listTimeTable;
 
     private Switch switchRepetition;
@@ -30,7 +30,6 @@ public class DialogEditTimeTable extends Dialog {
 
     public DialogEditTimeTable(@NonNull Context context) {
         super(context);
-        dataTransfer = (DataTransfer) context;
         setContentView(R.layout.layout_dialog_edit_time_table);
 
         init();
@@ -60,8 +59,12 @@ public class DialogEditTimeTable extends Dialog {
 
                     time = hour + ":" + minute;
 
-
-                    dataTransfer.editListTimeTable(listTimeTable.getId(), repetition, sizePortion, time);
+                    Intent intent = new Intent(Const.EditListTimeTable);
+                    intent.putExtra("listCheckBox", listTimeTable.getId());
+                    intent.putExtra("repetition", repetition);
+                    intent.putExtra("sizePortion", sizePortion);
+                    intent.putExtra("time", time);
+                    context.sendBroadcast(intent);
                     dismiss();
                 }
 

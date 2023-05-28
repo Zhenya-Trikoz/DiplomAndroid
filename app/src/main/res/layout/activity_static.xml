@@ -63,9 +63,10 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/buttonAdditionPlate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:background="#0288D1"
         android:text="Поповнити миску"
         android:textColor="#000000"

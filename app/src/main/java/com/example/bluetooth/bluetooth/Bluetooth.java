@@ -37,16 +37,16 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class Bluetooth extends AppCompatActivity {
     private TextView textViewStatusBt;
     private ListView listDeviceBt;
-    //
+
     public String[] ANDROID_12_BLUETOOTH_PERMISSIONS;
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
-    public static final int PERMISSION_REQUEST_CODE_ACCESS_FINE_LOCATION = 3;
     private BluetoothAdapter mBTAdapter;
     private BtAdapter btAdapter;
 
-    private List<BluetoothDevice> list;
+    private List<BluetoothDevice> bluetoothDeviceList;
 
-    //
+    int numberAttempt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,34 +63,16 @@ public class Bluetooth extends AppCompatActivity {
         if (!mBTAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-//            textViewStatusBt.setText("Bluetooth enabled");
         } else {
-            Toast.makeText(getApplicationContext(), "Bluetooth is already on", Toast.LENGTH_SHORT).show();
             discoveryDevice();
         }
 
         listDeviceBt.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                startServiceBluetooth("Connect bluetooth", list.get(position));
-
-//                Intent intent = new Intent(Bluetooth.this, TimeTable.class);
-//                intent.putExtra("device", list.get(position));
-//
-//                startActivity(intent);
-
+                startServiceBluetooth("Connect bluetooth", bluetoothDeviceList.get(position));
             }
         });
-
-    }
-
-    public void disconnect() {
-        Intent intent = new Intent(this, ServiceBluetooth.class);
-        intent.putExtra("command", "Disconnect");
-
-        startService(intent);
 
     }
 
@@ -100,7 +82,19 @@ public class Bluetooth extends AppCompatActivity {
         intent.putExtra("bluetooth_device", device);
 
         startService(intent);
+    }
 
+    public void disconnect() {
+        Intent intent = new Intent(this, ServiceBluetooth.class);
+        intent.putExtra("command", "Disconnect");
+
+        startService(intent);
+    }
+
+    public void passwordConfirmed() {
+        Log.d(Const.TAG, "Password access");
+        Intent intent = new Intent(this, TimeTable.class);
+        startActivity(intent);
     }
 
     public void enterPassword() {
@@ -137,10 +131,25 @@ public class Bluetooth extends AppCompatActivity {
         dialog.show();
     }
 
-    public void passwordConfirmed() {
-        Log.d(Const.TAG, "Password access");
-        Intent intent = new Intent(this, TimeTable.class);
-        startActivity(intent);
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(blReceiver);
+        unregisterReceiver(broadcastReceiverMainActivity);
+    }
+
+    private void discoveryDevice() {
+        if (mBTAdapter.isEnabled()) {
+
+            IntentFilter bluetoothFilter = new IntentFilter();
+            bluetoothFilter.addAction(BluetoothDevice.ACTION_FOUND);
+            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            registerReceiver(blReceiver, bluetoothFilter);
+        }
+        mBTAdapter.startDiscovery();
+
     }
 
     private final BroadcastReceiver broadcastReceiverMainActivity = new BroadcastReceiver() {
@@ -152,58 +161,31 @@ public class Bluetooth extends AppCompatActivity {
             } else if (action.equals(Const.ACTION_ACCESS_PROVIDE)) {
                 passwordConfirmed();
             } else if (action.equals(Const.ACTION_ACCESS_NOT_PROVIDE)) {
-                Toast.makeText(getApplicationContext(), "Пароль не правильний!\nСпробуйте знову.", Toast.LENGTH_SHORT).show();
-                disconnect();
+                numberAttempt++;
+                if (numberAttempt == 3) {
+                    Toast.makeText(getApplicationContext(), "Три стпроби було використано!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Виконайте підключення знову.", Toast.LENGTH_SHORT).show();
+                    numberAttempt = 0;
+                    disconnect();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Пароль не правильний!\nСпробуйте знову.", Toast.LENGTH_SHORT).show();
+                    enterPassword();
+                }
             }
         }
     };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(broadcastReceiverMainActivity);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-
-    private void discoveryDevice() {
-        if (mBTAdapter.isEnabled()) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//                ActivityCompat.requestPermissions(this, new Str
-//                ing[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE_ACCESS_FINE_LOCATION);
-//            }
-
-            IntentFilter bluetoothFilter = new IntentFilter();
-            bluetoothFilter.addAction(BluetoothDevice.ACTION_FOUND);
-            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-            bluetoothFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-            registerReceiver(blReceiver, bluetoothFilter);
-        }
-        boolean ableToStartDiscovery = mBTAdapter.startDiscovery();
-        if (ableToStartDiscovery) {
-            Toast.makeText(getApplicationContext(), "Start discovery", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    BroadcastReceiver blReceiver = new BroadcastReceiver() {
-
+    private final BroadcastReceiver blReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                list.add(device);
+                bluetoothDeviceList.add(device);
                 btAdapter.notifyDataSetChanged();
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 Toast.makeText(getApplicationContext(), "Discovery finished", Toast.LENGTH_SHORT).show();
                 textViewStatusBt.setText("Discovery finish");
-
             }
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 Toast.makeText(getApplicationContext(), "Discovery started", Toast.LENGTH_SHORT).show();
@@ -216,11 +198,10 @@ public class Bluetooth extends AppCompatActivity {
 
         listDeviceBt = findViewById(R.id.listDeviceBt);
         textViewStatusBt = findViewById(R.id.textViewStatusBt);
-
+        numberAttempt = 0;
         //Init bluetooth
         mBTAdapter = BluetoothAdapter.getDefaultAdapter();
         ANDROID_12_BLUETOOTH_PERMISSIONS = new String[]{
-//                Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
                 Manifest.permission.BLUETOOTH_SCAN,
@@ -230,19 +211,12 @@ public class Bluetooth extends AppCompatActivity {
         };
 
         // создаем адаптер
-        list = new ArrayList<>();
-        btAdapter = new BtAdapter(this, R.layout.element_list_bluetooth_device, list);
+        bluetoothDeviceList = new ArrayList<>();
+        btAdapter = new BtAdapter(this, R.layout.element_list_bluetooth_device, bluetoothDeviceList);
         listDeviceBt.setAdapter(btAdapter);
 
         configPermission();
 
-    }
-
-
-    public void configPermission() {
-        if (!EasyPermissions.hasPermissions(this, ANDROID_12_BLUETOOTH_PERMISSIONS)) {
-            EasyPermissions.requestPermissions(this, "please give me bluetooth permissions", 3, ANDROID_12_BLUETOOTH_PERMISSIONS);
-        }
     }
 
 
@@ -261,11 +235,16 @@ public class Bluetooth extends AppCompatActivity {
         }
     }
 
+    public void configPermission() {
+        if (!EasyPermissions.hasPermissions(this, ANDROID_12_BLUETOOTH_PERMISSIONS)) {
+            EasyPermissions.requestPermissions(this, "please give me bluetooth permissions", 3, ANDROID_12_BLUETOOTH_PERMISSIONS);
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
-
 
 }

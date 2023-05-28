@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -16,10 +15,7 @@ import androidx.annotation.Nullable;
 import com.example.bluetooth.Const;
 import com.example.bluetooth.DataRead_Write;
 import com.example.bluetooth.timeTable.ListTimeTable;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +47,6 @@ public class ServiceBluetooth extends Service {
         init();
         myGattCallback = new BluetoothGattCallback(this);
 
-        // receiver = new MyBroadcastReceiverBluetooth();
-
         receiver = new BroadcastReceiverServiceBluetooth();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Const.ACTION_DATA_READ);
@@ -60,7 +54,6 @@ public class ServiceBluetooth extends Service {
         registerReceiver(receiver, filter);
 
     }
-
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -74,16 +67,12 @@ public class ServiceBluetooth extends Service {
                     if (device != null) {
                         Log.d(Const.TAG, "device: " + device);
                         bluetoothGatt = device.connectGatt(this, true, myGattCallback);
-
-                        Intent intent1 = new Intent("Start");
-                        intent1.putExtra("device", "11111");
-                        sendBroadcast(intent1);
                     }
                     break;
                 case "Disconnect":
                     bluetoothGatt.disconnect();
+                    bluetoothGatt.close();
                     Log.d(Const.TAG, "bluetoothGatt.disconnect");
-
                     break;
                 case "Send data":
                     listTimeTables = DataRead_Write.dataReadListTimeTable(getApplicationContext());
@@ -96,12 +85,23 @@ public class ServiceBluetooth extends Service {
                         dataSize = "0" + listTimeTables.size();
                     }
                     List<String> textPackage = new ArrayList<>();
-                    String end = "\n";
+                    String end = "~";
 
                     for (int i = 0; i < listTimeTables.size(); i++) {
                         String numberPackage = String.valueOf(i);
+
+                        String[] s = listTimeTables.get(i).getTime().split(":");
+                        String time = "" + (Integer.parseInt(s[0]) * 60 + Integer.parseInt(s[1]));
+                        if (Integer.parseInt(time) <= 9) {
+                            time = "000" + time;
+                        } else if (Integer.parseInt(time) <= 99) {
+                            time = "00" + time;
+                        } else if (Integer.parseInt(time) <= 999) {
+                            time = "0" + time;
+                        }
                         String sizePortion = listTimeTables.get(i).getSizePortion();
-                        String repetitionPackage = "F";
+
+                        String repetitionPackage = "0";
                         if (Integer.parseInt(listTimeTables.get(i).getSizePortion()) <= 9) {
                             sizePortion = "00" + listTimeTables.get(i).getSizePortion();
                         } else if (Integer.parseInt(listTimeTables.get(i).getSizePortion()) <= 99) {
@@ -113,16 +113,17 @@ public class ServiceBluetooth extends Service {
                             numberPackage = "0" + i;
                         }
                         if (listTimeTables.get(i).isRepetition()) {
-                            repetitionPackage = "T";
+                            repetitionPackage = "1";
                         }
                         String buff = com
                                 + dataSize
                                 + numberPackage
                                 + getWeekDay(listTimeTables.get(i).getWeekDay())
-                                + listTimeTables.get(i).getTime()
+                                + time
                                 + sizePortion
                                 + repetitionPackage
                                 + end;
+                        Log.d(Const.TAG, "buff: " + buff);
                         textPackage.add(buff);
                     }
 
@@ -152,7 +153,7 @@ public class ServiceBluetooth extends Service {
                     Log.d(Const.TAG, "data Service: " + b);
                     break;
                 case "Send password":
-                    String password = intent.getStringExtra("password");
+                    String password = "P" + intent.getStringExtra("password") + "~";
 
                     byte[] value = password.getBytes(StandardCharsets.UTF_8);
                     characteristicGatt = bluetoothGatt
@@ -167,25 +168,25 @@ public class ServiceBluetooth extends Service {
     }
 
 
-    public String getWeekDay(String weekDay) {
+    public int getWeekDay(String weekDay) {
 
         switch (weekDay) {
             case "Пн":
-                return "Mo";
+                return 1;
             case "Вт":
-                return "Tu";
+                return 2;
             case "Ср":
-                return "We";
+                return 3;
             case "Чт":
-                return "Th";
+                return 4;
             case "Пт":
-                return "Fr";
+                return 5;
             case "Сб":
-                return "Sa";
+                return 6;
             case "Нд":
-                return "Su";
+                return 7;
         }
-        return "";
+        return 0;
     }
 
     public void init() {
@@ -194,11 +195,10 @@ public class ServiceBluetooth extends Service {
         listTimeTables = new ArrayList<>();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(receiver);
-    }
-
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        unregisterReceiver(receiver);
+//    }
 
 }

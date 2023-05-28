@@ -2,6 +2,7 @@ package com.example.bluetooth.dialog;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -10,7 +11,7 @@ import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.example.bluetooth.timeTable.DataTransfer;
+import com.example.bluetooth.Const;
 import com.example.bluetooth.R;
 //import com.jjoe64.graphview.GraphView;
 //import com.jjoe64.graphview.series.DataPoint;
@@ -23,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DialogCreateTimeTable extends Dialog {
-    private DataTransfer dataTransfer;
-
 
     private CheckBox checkBoxMonday, checkBoxTuesday, checkBoxWednesday, checkBoxThursday, checkBoxFriday, checkBoxSaturday, checkBoxSunday;
     private Switch switchRepetition;
@@ -33,63 +32,17 @@ public class DialogCreateTimeTable extends Dialog {
     private Button buttonOk;
 
     //
-    List<String> listCheckBox;
+    ArrayList<String> listCheckBox;
     boolean repetition;
     String sizePortion;
     String time;
 
     public DialogCreateTimeTable(Context context) {
         super(context);
-        dataTransfer = (DataTransfer) context;
         setContentView(R.layout.layout_dialog_create_time_table);
 
         init();
 
-//        GraphView graph = (GraphView) findViewById(R.id.graph);
-//        LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(new DataPoint[]{
-//                new DataPoint(0, 1),
-//                new DataPoint(1, 5),
-//                new DataPoint(2, 3),
-//                new DataPoint(3, 2),
-//                new DataPoint(4, 6)
-//        });
-//        graph.addSeries(series);
-
-        ///
-
-//        LineGraph graph = (LineGraph) findViewById(R.id.graph1);
-//
-//        long unixTimeNow = System.currentTimeMillis();
-//        long oneDayInMillis = 1000 * 60 * 60 * 24;
-//        boolean showLinePoints = true;
-//
-//        Line line = getDummyLine(unixTimeNow, unixTimeNow + oneDayInMillis, showLinePoints);
-//        line.setLineColor(Color.parseColor("#FFFFFF"));
-//        line.setFillLine(true);
-//        line.setFillAlpha(60); /* Set alpha of the fill color 0-255 */
-//        line.setLineStrokeWidth(2f);
-//
-//        graph.setMaxVerticalAxisValue(GRAPH_MAX_VERTICAL_VALUE);
-//        graph.addLine(line);
-
-
-//        //////////
-//        List<PointValue> values = new ArrayList<>();
-//        values.add(new PointValue(0, 10));
-//        values.add(new PointValue(1, 4));
-//        values.add(new PointValue(2, 3));
-//        values.add(new PointValue(3, 4));
-//
-//        //In most cased you can call data model methods in builder-pattern-like manner.
-//        Line line = new Line(values).setColor(Color.BLUE).setCubic(true);
-//        List<Line> lines = new ArrayList<Line>();
-//        lines.add(line);
-//
-//        LineChartData data = new LineChartData();
-//        data.setLines(lines);
-//
-//        LineChartView chart = findViewById(R.id.chart);
-//        chart.setLineChartData(data);
         // Встановлюємо слухача для кнопки OK
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -144,32 +97,20 @@ public class DialogCreateTimeTable extends Dialog {
 
                     time = hour + ":" + minute;
 
-                    dataTransfer.createListTimeTable(listCheckBox, repetition, sizePortion, time);
+//                    dataTransfer.createListTimeTable(listCheckBox, repetition, sizePortion, time);
 
+                    Intent intent = new Intent(Const.CreateListTimeTable);
+                    intent.putStringArrayListExtra("listCheckBox", listCheckBox);
+                    intent.putExtra("repetition", repetition);
+                    intent.putExtra("sizePortion", sizePortion);
+                    intent.putExtra("time", time);
+                    context.sendBroadcast(intent);
                     dismiss();
                 }
             }
         });
     }
 
-    static final int GRAPH_MAX_VERTICAL_VALUE = 120;
-
-//    public Line getDummyLine(long startDateInMillis, long endDateInMillis, boolean showPoints) {
-//        Line line = new Line();
-//        Random random = new Random();
-//
-//        LinePoint point;
-//        for (int i = 0; i < 10; i++) {
-//            long x = startDateInMillis + (((endDateInMillis - startDateInMillis) / 10) * i);
-//
-//            point = new LinePoint(x, random.nextInt(GRAPH_MAX_VERTICAL_VALUE));
-//            point.setDrawPoint(showPoints);
-//
-//            line.addPoint(point);
-//        }
-//
-//        return line;
-//    }
 
     public void init() {
         checkBoxMonday = findViewById(R.id.checkBoxMonday);

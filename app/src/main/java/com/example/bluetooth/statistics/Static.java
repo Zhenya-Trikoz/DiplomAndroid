@@ -1,14 +1,22 @@
 package com.example.bluetooth.statistics;
 
-import android.content.SharedPreferences;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.bluetooth.Const;
 import com.example.bluetooth.DataRead_Write;
 import com.example.bluetooth.R;
 import com.github.mikephil.charting.charts.BarChart;
@@ -17,7 +25,6 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -26,12 +33,10 @@ import java.util.List;
 
 public class Static extends AppCompatActivity {
 
-    private SharedPreferences pref;
-    private SharedPreferences.Editor editor;
-    Gson gson;
     List<ListDiagramSIzePortion> listDiagramSIzePortions; //Список використання корму в день
 
     BarChart barChart;
+    Button buttonAddPlate;
     Calendar calendar;
 
     @Override
@@ -121,19 +126,61 @@ public class Static extends AppCompatActivity {
         barChart.setData(lineData);
         barChart.invalidate(); // refresh
 
+        buttonAddPlate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                additionPlate();
+            }
+        });
     }
 
     public void init() {
         listDiagramSIzePortions = new ArrayList<>();
         calendar = Calendar.getInstance();
         listDiagramSIzePortions = DataRead_Write.dataReadListDiagramSIzePortion(getApplicationContext());
+        buttonAddPlate = findViewById(R.id.buttonAdditionPlate);
     }
 
+    public void additionPlate() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Static.this);
+        builder.setTitle("Поповнення миски");
+
+        View view = LayoutInflater.from(Static.this).inflate(R.layout.layout_dialog_password, null);
+        builder.setView(view);
+
+        EditText editText = view.findViewById(R.id.editTextPassword);
+        editText.setHint("Введіть корм у грамах");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String additionPlate = editText.getText().toString();
+                Toast.makeText(getApplicationContext(), "addPlate: " + additionPlate, Toast.LENGTH_SHORT).show();
+
+                if (additionPlate.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "Невірно введені дані, спробуйте знову", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(Const.ACTION_PASSWORD_SEND);
+                    intent.putExtra("password", additionPlate);
+                    sendBroadcast(intent);
+                }
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
+        inflater.inflate(R.menu.menu_static, menu);
         return true;
     }
 

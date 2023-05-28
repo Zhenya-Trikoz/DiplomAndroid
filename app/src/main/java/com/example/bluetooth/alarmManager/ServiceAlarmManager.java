@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -19,7 +18,6 @@ import com.example.bluetooth.DataRead_Write;
 import com.example.bluetooth.R;
 import com.example.bluetooth.statistics.ListDiagramSIzePortion;
 import com.example.bluetooth.timeTable.ListTimeTable;
-import com.google.gson.Gson;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -47,9 +45,6 @@ public class ServiceAlarmManager extends Service {
 //        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, PendingIntent.FLAG_IMMUTABLE);
     }
 
-    private SharedPreferences pref;
-    private SharedPreferences.Editor editor;
-    Gson gson;
     List<ListTimeTable> listTimeTables; //Список годувань
     List<ListDiagramSIzePortion> listDiagramSizePortions; //Список використання корму в день
     Calendar calendar;
@@ -63,7 +58,6 @@ public class ServiceAlarmManager extends Service {
             init();
 
             readData();
-
 
             switch (command) {
                 case "midnight":
@@ -88,6 +82,18 @@ public class ServiceAlarmManager extends Service {
                         calendar = Calendar.getInstance();
                         calendar.setTimeInMillis(System.currentTimeMillis());
 
+                        intent = new Intent(this, BroadcastReceiverAlarmManager.class);
+                        intent.putExtra("command", Const.COMMAND_SERVICE_FINISH_TIMETABLE_TODAY);
+                        for (int i = 0; i < listTimeTables.size(); i++) {
+                            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+                            intent.putExtra("id", listTimeTables.get(i).getId());
+                            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), listTimeTables.get(i).getId(), intent,  PendingIntent.FLAG_IMMUTABLE);
+
+                            alarmManager.cancel(pendingIntent);
+
+                            pendingIntent.cancel();
+                        }
 
                         listTimeTables = listTimeTables.stream()
                                 .filter(e -> e.getWeekDay().equals(getWeekDayString(calendar.get(Calendar.DAY_OF_WEEK))))
@@ -230,12 +236,6 @@ public class ServiceAlarmManager extends Service {
         String s = intent.getStringExtra("command");
         if (s.equals(Const.COMMAND_MIDNIGHT)) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
-//            calendar = Calendar.getInstance();
-//            calendar.setTimeInMillis(System.currentTimeMillis());
-//            calendar.add(Calendar.MINUTE, 1);
-//            calendar.set(Calendar.SECOND, 30);
-//            calendar.set(Calendar.MILLISECOND, 0);
-
         }
         Log.d(Const.TAG, "Calendar.HOUR_OF_DAY: " + calendar.get(Calendar.HOUR_OF_DAY));
         Log.d(Const.TAG, "Calendar.MINUTE: " + calendar.get(Calendar.MINUTE));

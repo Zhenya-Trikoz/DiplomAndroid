@@ -23,4 +23,6 @@ public class Const {
     public static String YOUR_CHARACTERISTIC_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
     public static String CLIENT_CHARACTERISTIC_CONFIG_UUID = "00002902-0000-1000-8000-00805f9b34fb";
 
+    public static String CreateListTimeTable = "CreateListTimeTable";
+    public static String EditListTimeTable = "EditListTimeTable";
 }
