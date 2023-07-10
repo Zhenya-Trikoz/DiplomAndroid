@@ -12,33 +12,33 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.example.bluetooth.Const;
-import com.example.bluetooth.DataRead_Write;
+import com.example.bluetooth.constFields.ConstFields;
+import com.example.bluetooth.csv.DataRead_Write;
 import com.example.bluetooth.timeTable.ListTimeTable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
 @SuppressLint("MissingPermission")
 public class ServiceBluetooth extends Service {
 
-    BluetoothDevice device;
+    private BluetoothDevice device;
     private BluetoothGattCharacteristic characteristicGatt;
     public BluetoothGatt bluetoothGatt;
-    BluetoothGattCallback myGattCallback;
+    private BluetoothGattCallback myGattCallback;
 
-    String a;
-    List<ListTimeTable> listTimeTables; //Список годувань
+    private String a;
+    private List<ListTimeTable> listTimeTables; //Список годувань
+    private BroadcastReceiverServiceBluetooth broadcastReceiverServiceBluetooth;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-    private BroadcastReceiverServiceBluetooth receiver;
 
     @Override
     public void onCreate() {
@@ -47,11 +47,16 @@ public class ServiceBluetooth extends Service {
         init();
         myGattCallback = new BluetoothGattCallback(this);
 
-        receiver = new BroadcastReceiverServiceBluetooth();
+        broadcastReceiverServiceBluetooth = new BroadcastReceiverServiceBluetooth();
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Const.ACTION_DATA_READ);
-        filter.addAction(Const.ACTION_PASSWORD_SEND);
-        registerReceiver(receiver, filter);
+        filter.addAction(ConstFields.ACTION_DISCONNECT);
+        filter.addAction(ConstFields.ACTION_DATA_READ);
+        filter.addAction(ConstFields.ACTION_DATA_SEND);
+        filter.addAction(ConstFields.ACTION_PASSWORD_SEND);
+        filter.addAction(ConstFields.ACTION_ADDITION_SEND);
+        filter.addAction(ConstFields.ACTION_TIME_SEND);
+        filter.addAction(ConstFields.ACTION_MEASURE_WEIGHT_SEND);
+        registerReceiver(broadcastReceiverServiceBluetooth, filter);
 
     }
 
@@ -59,36 +64,30 @@ public class ServiceBluetooth extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             String command = intent.getStringExtra("command");
-            Log.d(Const.TAG, "ServiceBluetooth start command: " + command);
+            Log.d(ConstFields.TAG, "ServiceBluetooth start command: " + command);
 
             switch (command) {
-                case "Connect bluetooth":
+                case ConstFields.ACTION_CONNECT_DEVICE:
                     device = intent.getParcelableExtra("bluetooth_device");
                     if (device != null) {
-                        Log.d(Const.TAG, "device: " + device);
+                        Log.d(ConstFields.TAG, "device: " + device);
                         bluetoothGatt = device.connectGatt(this, true, myGattCallback);
                     }
                     break;
-                case "Disconnect":
+                case ConstFields.ACTION_DISCONNECT:
                     bluetoothGatt.disconnect();
                     bluetoothGatt.close();
-                    Log.d(Const.TAG, "bluetoothGatt.disconnect");
+                    Log.d(ConstFields.TAG, "Bluetooth disconnect");
                     break;
-                case "Send data":
+                case ConstFields.ACTION_DATA_SEND:
                     listTimeTables = DataRead_Write.dataReadListTimeTable(getApplicationContext());
 
                     String com = "D";
-                    String dataSize = String.valueOf(listTimeTables.size());
-                    if (listTimeTables.size() <= 9) {
-                        dataSize = "00" + listTimeTables.size();
-                    } else if (listTimeTables.size() <= 99) {
-                        dataSize = "0" + listTimeTables.size();
-                    }
+
                     List<String> textPackage = new ArrayList<>();
                     String end = "~";
 
                     for (int i = 0; i < listTimeTables.size(); i++) {
-                        String numberPackage = String.valueOf(i);
 
                         String[] s = listTimeTables.get(i).getTime().split(":");
                         String time = "" + (Integer.parseInt(s[0]) * 60 + Integer.parseInt(s[1]));
@@ -99,68 +98,63 @@ public class ServiceBluetooth extends Service {
                         } else if (Integer.parseInt(time) <= 999) {
                             time = "0" + time;
                         }
-                        String sizePortion = listTimeTables.get(i).getSizePortion();
+                        String sizePortion = getStringLess(Integer.parseInt(listTimeTables.get(i).getSizePortion()));
 
                         String repetitionPackage = "0";
-                        if (Integer.parseInt(listTimeTables.get(i).getSizePortion()) <= 9) {
-                            sizePortion = "00" + listTimeTables.get(i).getSizePortion();
-                        } else if (Integer.parseInt(listTimeTables.get(i).getSizePortion()) <= 99) {
-                            sizePortion = "0" + listTimeTables.get(i).getSizePortion();
-                        }
-                        if (i <= 9) {
-                            numberPackage = "00" + i;
-                        } else if (i <= 99) {
-                            numberPackage = "0" + i;
-                        }
                         if (listTimeTables.get(i).isRepetition()) {
                             repetitionPackage = "1";
                         }
                         String buff = com
-                                + dataSize
-                                + numberPackage
-                                + getWeekDay(listTimeTables.get(i).getWeekDay())
+                                + getWeekDayAsInt(listTimeTables.get(i).getWeekDay())
                                 + time
                                 + sizePortion
                                 + repetitionPackage
                                 + end;
-                        Log.d(Const.TAG, "buff: " + buff);
+//                        Log.d(ConstFields.TAG, "buff: " + buff);
                         textPackage.add(buff);
                     }
 
-//                    bluetoothGatt = device.connectGatt(this, true, myGattCallback);
-
                     for (String s : textPackage) {
-//                        String s = "Пн, Вт" + "\n";
-//                        Log.d(Const.TAG, "textPackage: " + s);
-                        byte[] value = s.getBytes(StandardCharsets.UTF_8);
-                        characteristicGatt = bluetoothGatt
-                                .getService(UUID.fromString(Const.UUID_SERVICE))
-                                .getCharacteristic(UUID.fromString(Const.YOUR_CHARACTERISTIC_UUID));
-
-                        characteristicGatt.setValue(value);
-                        bluetoothGatt.writeCharacteristic(characteristicGatt);
-
+                        updateData(s);
                         try {
-                            Thread.sleep(10);
+                            Thread.sleep(120);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
                     }
+                    updateData("C1~");
                     break;
-                case "Read data":
+                case ConstFields.ACTION_DATA_READ:
                     a += intent.getStringExtra("data");
                     String b = a;
-                    Log.d(Const.TAG, "data Service: " + b);
-                    break;
-                case "Send password":
-                    String password = "P" + intent.getStringExtra("password") + "~";
 
-                    byte[] value = password.getBytes(StandardCharsets.UTF_8);
-                    characteristicGatt = bluetoothGatt
-                            .getService(UUID.fromString(Const.UUID_SERVICE))
-                            .getCharacteristic(UUID.fromString(Const.YOUR_CHARACTERISTIC_UUID));
-                    characteristicGatt.setValue(value);
-                    bluetoothGatt.writeCharacteristic(characteristicGatt);
+                    Log.d(ConstFields.TAG, "data Service: " + b.length());
+                    break;
+                case ConstFields.ACTION_PASSWORD_SEND:
+                    String password = "P" + intent.getStringExtra("password") + "~";
+                    Log.d(ConstFields.TAG, "Password send: " + intent.getStringExtra("password"));
+                    updateData(password);
+                    break;
+                case ConstFields.ACTION_ADDITION_SEND:
+                    String addition = "C3" + intent.getStringExtra("feed") + "~";
+                    updateData(addition);
+                    break;
+                case ConstFields.ACTION_MEASURE_WEIGHT_SEND:
+                    String definition = "C2~";
+                    updateData(definition);
+                    break;
+                case ConstFields.ACTION_TIME_SEND:
+
+                    Calendar calendar = Calendar.getInstance();
+
+                    String year = getStringLess(calendar.get(Calendar.YEAR));
+                    String month = getStringLess(calendar.get(Calendar.MONTH) + 1);
+                    String day = getStringLess(calendar.get(Calendar.DAY_OF_MONTH));
+                    String hour = getStringLess(calendar.get(Calendar.HOUR_OF_DAY));
+                    String minute = getStringLess(calendar.get(Calendar.MINUTE));
+                    String second = getStringLess(calendar.get(Calendar.SECOND));
+                    String time = "T" + year + month + day + hour + minute + second + "~";
+                    updateData(time);
                     break;
             }
         }
@@ -168,37 +162,49 @@ public class ServiceBluetooth extends Service {
     }
 
 
-    public int getWeekDay(String weekDay) {
+    public void updateData(String data) {
+        byte[] value = data.getBytes(StandardCharsets.UTF_8);
+        characteristicGatt = bluetoothGatt
+                .getService(UUID.fromString(ConstFields.UUID_SERVICE))
+                .getCharacteristic(UUID.fromString(ConstFields.CHARACTERISTIC_UUID));
+        characteristicGatt.setValue(value);
+        bluetoothGatt.writeCharacteristic(characteristicGatt);
+    }
+
+    public String getStringLess(int number) {
+        String s;
+        if (number <= 9) {
+            s = "0" + number;
+        } else {
+            s = String.valueOf(number);
+        }
+        return s;
+    }
+
+    public int getWeekDayAsInt(String weekDay) {
 
         switch (weekDay) {
             case "Пн":
-                return 1;
+                return 0;
             case "Вт":
-                return 2;
+                return 1;
             case "Ср":
-                return 3;
+                return 2;
             case "Чт":
-                return 4;
+                return 3;
             case "Пт":
-                return 5;
+                return 4;
             case "Сб":
-                return 6;
+                return 5;
             case "Нд":
-                return 7;
+                return 6;
         }
         return 0;
     }
 
     public void init() {
-
         a = "";
         listTimeTables = new ArrayList<>();
     }
-
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        unregisterReceiver(receiver);
-//    }
 
 }

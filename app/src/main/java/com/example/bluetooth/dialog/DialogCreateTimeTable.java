@@ -11,7 +11,7 @@ import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.example.bluetooth.Const;
+import com.example.bluetooth.constFields.ConstFields;
 import com.example.bluetooth.R;
 //import com.jjoe64.graphview.GraphView;
 //import com.jjoe64.graphview.series.DataPoint;
@@ -21,7 +21,6 @@ import com.example.bluetooth.R;
 //import com.velli20.materialunixgraph.LinePoint;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DialogCreateTimeTable extends Dialog {
 
@@ -32,10 +31,10 @@ public class DialogCreateTimeTable extends Dialog {
     private Button buttonOk;
 
     //
-    ArrayList<String> listCheckBox;
-    boolean repetition;
-    String sizePortion;
-    String time;
+    private ArrayList<String> listCheckBox;
+    private boolean repetition;
+    private String sizePortion;
+    private String time;
 
     public DialogCreateTimeTable(Context context) {
         super(context);
@@ -43,7 +42,6 @@ public class DialogCreateTimeTable extends Dialog {
 
         init();
 
-        // Встановлюємо слухача для кнопки OK
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,28 +76,19 @@ public class DialogCreateTimeTable extends Dialog {
                 // Передаємо дані до активності за допомогою інтерфейсу або іншого способу
                 // Закриваємо діалог
 
-                if (listCheckBox.size() == 0 || sizePortion.length() == 0) {
+                if (listCheckBox.size() == 0 || sizePortion.length() == 0 || Integer.parseInt(sizePortion) > 99) {
                     Toast.makeText(context, "Невірно введені дані, спробуйте знову", Toast.LENGTH_SHORT).show();
                     listCheckBox.clear();
                 } else {
-                    String hour, minute;
-                    if (timePicker.getHour() <= 9) {
-                        hour = "0" + timePicker.getHour();
-                    } else {
-                        hour = String.valueOf(timePicker.getHour());
-                    }
 
-                    if (timePicker.getMinute() <= 9) {
-                        minute = "0" + timePicker.getMinute();
-                    } else {
-                        minute = String.valueOf(timePicker.getMinute());
-                    }
+                    String hour = getStringLess(timePicker.getHour());
+                    String minute = getStringLess(timePicker.getMinute());
 
                     time = hour + ":" + minute;
 
 //                    dataTransfer.createListTimeTable(listCheckBox, repetition, sizePortion, time);
 
-                    Intent intent = new Intent(Const.CreateListTimeTable);
+                    Intent intent = new Intent(ConstFields.CREATE_LIST_TIME_TABLE);
                     intent.putStringArrayListExtra("listCheckBox", listCheckBox);
                     intent.putExtra("repetition", repetition);
                     intent.putExtra("sizePortion", sizePortion);
@@ -132,5 +121,15 @@ public class DialogCreateTimeTable extends Dialog {
 
         listCheckBox = new ArrayList<>();
         repetition = false;
+    }
+
+    public String getStringLess(int number) {
+        String s;
+        if (number <= 9) {
+            s = "0" + number;
+        } else {
+            s = String.valueOf(number);
+        }
+        return s;
     }
 }

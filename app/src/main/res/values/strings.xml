@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">Bluetooth</string>
+    <string name="app_name">FeedPlus</string>
     <string name="enablebt">EnableBt</string>
     <string name="searchbt">SearchBt</string>
-    <string name="status">Status:</string>
+    <string name="status">Статус:</string>
     <string name="text">TEXT</string>
     <string name="disablebt">DisableBt</string>
     <string name="mac_address">MAC-address</string>

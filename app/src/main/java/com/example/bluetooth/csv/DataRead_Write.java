@@ -1,11 +1,12 @@
-package com.example.bluetooth;
+package com.example.bluetooth.csv;
 
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.bluetooth.statistics.ListDiagramSIzePortion;
+import com.example.bluetooth.constFields.ConstFields;
+import com.example.bluetooth.statistics.ListDiagramSizePortion;
 import com.example.bluetooth.timeTable.ListTimeTable;
 import com.opencsv.CSVWriter;
 
@@ -83,15 +84,15 @@ public class DataRead_Write {
             writer.close();
             fileWriter.close();
 
-            Log.d(Const.TAG, "Файл " + fileNameListTimeTable + " успішно збережено у внутрішньому сховищі.");
+            Log.d(ConstFields.TAG, "Файл " + fileNameListTimeTable + " успішно збережено у внутрішньому сховищі.");
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(Const.TAG, "Помилка збереження " + fileNameListTimeTable + " у внутрішньому сховищі.");
+            Log.e(ConstFields.TAG, "Помилка збереження " + fileNameListTimeTable + " у внутрішньому сховищі.");
         }
     }
 
-    public static List<ListDiagramSIzePortion> dataReadListDiagramSIzePortion(Context context) {
-        List<ListDiagramSIzePortion> listDiagramSIzePortions = new ArrayList<>();
+    public static List<ListDiagramSizePortion> dataReadListDiagramSizePortion(Context context) {
+        List<ListDiagramSizePortion> listDiagramSizePortions = new ArrayList<>();
         try {
             File file = new File(context.getFilesDir(), fileNameListDiagramSizePortion);
             Scanner scanner = new Scanner(file);
@@ -106,34 +107,21 @@ public class DataRead_Write {
                 String line = scanner.nextLine();
 
                 String weekDay = line.substring(0, 4).replaceAll("\"", "");
-                String sizePortion = line.substring(5).replaceAll("\"", "");
+                String sumUsedFeed = line.substring(5).replaceAll("\"", "");
 
-                sizePortion = sizePortion.replaceAll("[^\\d,]", "");
 
-                List<Integer> numbers = new ArrayList<>();
-
-                if (sizePortion.length() > 0) {
-                    String[] mass = sizePortion.split(",");
-//                    Log.d(Const.TAG, "mass: " + Arrays.toString(mass));
-
-                    for (String part : mass) {
-                        int num = Integer.parseInt(part.trim());
-                        numbers.add(num);
-                    }
-                }
-
-                ListDiagramSIzePortion listTimeTable = new ListDiagramSIzePortion(weekDay, numbers);
-                listDiagramSIzePortions.add(listTimeTable);
+                ListDiagramSizePortion listTimeTable = new ListDiagramSizePortion(weekDay, Integer.parseInt(sumUsedFeed));
+                listDiagramSizePortions.add(listTimeTable);
             }
 //            Log.d(Const.TAG, "listDiagramSIzePortions: " + listDiagramSIzePortions);
             scanner.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        return listDiagramSIzePortions;
+        return listDiagramSizePortions;
     }
 
-    public static void dataWriteListDiagramSIzePortion(Context context, List<ListDiagramSIzePortion> list) {
+    public static void dataWriteListDiagramSizePortion(Context context, List<ListDiagramSizePortion> list) {
         File file = new File(context.getFilesDir(), fileNameListDiagramSizePortion);
         String path = file.getAbsolutePath();
 
@@ -145,17 +133,17 @@ public class DataRead_Write {
             String[] HEADERS = {"weekDay", "sizePortion"};
             writer.writeNext(HEADERS);
 
-            for (ListDiagramSIzePortion listDiagramSIzePortion : list) {
-                String[] data = {listDiagramSIzePortion.getWeekDay(), String.valueOf(listDiagramSIzePortion.getListSizePortion())};
+            for (ListDiagramSizePortion listDiagramSIzePortion : list) {
+                String[] data = {listDiagramSIzePortion.getWeekDay(), String.valueOf(listDiagramSIzePortion.getSumUsedFeed())};
                 writer.writeNext(data);
             }
             writer.close();
             fileWriter.close();
 
-            Log.d(Const.TAG, "Файл " + fileNameListDiagramSizePortion + " успішно збережено у внутрішньому сховищі.");
+            Log.d(ConstFields.TAG, "Файл " + fileNameListDiagramSizePortion + " успішно збережено у внутрішньому сховищі.");
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(Const.TAG, "Помилка збереження " + fileNameListDiagramSizePortion + " у внутрішньому сховищі.");
+            Log.e(ConstFields.TAG, "Помилка збереження " + fileNameListDiagramSizePortion + " у внутрішньому сховищі.");
         }
     }
 
@@ -174,21 +162,21 @@ public class DataRead_Write {
             }
 
             String[] statistic = {data, time, sizePortion};
-            Log.d(Const.TAG, "static: " + Arrays.toString(statistic));
+            Log.d(ConstFields.TAG, "static: " + Arrays.toString(statistic));
             writer.writeNext(statistic);
 
             writer.close();
             fileWriter.close();
 
-            Log.d(Const.TAG, "Файл " + fileNameStatistic + " успішно збережено у внутрішньому сховищі.");
+            Log.d(ConstFields.TAG, "Файл " + fileNameStatistic + " успішно збережено у внутрішньому сховищі.");
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(Const.TAG, "Помилка збереження " + fileNameStatistic + " у внутрішньому сховищі.");
+            Log.e(ConstFields.TAG, "Помилка збереження " + fileNameStatistic + " у внутрішньому сховищі.");
         }
 
     }
 
-    public static void dataCopyListDiagramSIzePortion(Context context) {
+    public static void dataCopyStatistic(Context context) {
 
         File file = new File(context.getFilesDir(), fileNameStatistic);
 

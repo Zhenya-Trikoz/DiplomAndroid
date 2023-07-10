@@ -29,7 +29,7 @@
             android:name=".timeTable.TimeTable"
             android:exported="true" />
         <activity
-            android:name=".statistics.Static"
+            android:name=".statistics.Statistics"
             android:exported="true" />
         <activity
             android:name=".bluetooth.Bluetooth"

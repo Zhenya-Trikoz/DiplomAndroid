@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.bluetooth.Const;
+import com.example.bluetooth.constFields.ConstFields;
 import com.example.bluetooth.R;
 import com.example.bluetooth.timeTable.ListTimeTable;
 
@@ -24,9 +24,9 @@ public class DialogEditTimeTable extends Dialog {
     private TimePicker timePicker;
     private Button buttonOk;
 
-    boolean repetition;
-    String sizePortion;
-    String time;
+    private boolean repetition;
+    private String sizePortion;
+    private String time;
 
     public DialogEditTimeTable(@NonNull Context context) {
         super(context);
@@ -41,26 +41,16 @@ public class DialogEditTimeTable extends Dialog {
                 repetition = switchRepetition.isChecked();
 
                 sizePortion = editTextSizePortion.getText().toString();
-                if (sizePortion.length() == 0) {
+                if (sizePortion.length() == 0 || Integer.parseInt(sizePortion) > 99) {
                     Toast.makeText(context, "Невірно введені дані, спробуйте знову", Toast.LENGTH_SHORT).show();
                 } else {
-                    String hour, minute;
-                    if (timePicker.getHour() <= 9) {
-                        hour = "0" + timePicker.getHour();
-                    } else {
-                        hour = String.valueOf(timePicker.getHour());
-                    }
-
-                    if (timePicker.getMinute() <= 9) {
-                        minute = "0" + timePicker.getMinute();
-                    } else {
-                        minute = String.valueOf(timePicker.getMinute());
-                    }
+                    String hour = getStringLess(timePicker.getHour());
+                    String minute = getStringLess(timePicker.getMinute());
 
                     time = hour + ":" + minute;
 
-                    Intent intent = new Intent(Const.EditListTimeTable);
-                    intent.putExtra("listCheckBox", listTimeTable.getId());
+                    Intent intent = new Intent(ConstFields.EDIT_LIST_TIME_TABLE);
+                    intent.putExtra("id", listTimeTable.getId());
                     intent.putExtra("repetition", repetition);
                     intent.putExtra("sizePortion", sizePortion);
                     intent.putExtra("time", time);
@@ -84,7 +74,15 @@ public class DialogEditTimeTable extends Dialog {
         buttonOk = findViewById(R.id.buttonOk);
 
     }
-
+    public String getStringLess(int number) {
+        String s;
+        if (number <= 9) {
+            s = "0" + number;
+        } else {
+            s = String.valueOf(number);
+        }
+        return s;
+    }
     public void data(ListTimeTable listTimeTable) {
         this.listTimeTable = listTimeTable;
 

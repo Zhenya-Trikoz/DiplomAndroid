@@ -15,12 +15,13 @@ import androidx.annotation.Nullable;
 import com.example.bluetooth.R;
 
 import java.util.List;
+
 @SuppressLint("MissingPermission")
-public class BtAdapter extends ArrayAdapter<BluetoothDevice> {
+public class AdapterListViewBluetooth extends ArrayAdapter<BluetoothDevice> {
 
     private List<BluetoothDevice> list;
 
-    public BtAdapter(@NonNull Context context, int resource, List<BluetoothDevice> btList) {
+    public AdapterListViewBluetooth(@NonNull Context context, int resource, List<BluetoothDevice> btList) {
         super(context, resource, btList);
         list = btList;
     }

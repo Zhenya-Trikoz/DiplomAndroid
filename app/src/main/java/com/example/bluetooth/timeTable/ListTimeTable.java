@@ -11,13 +11,7 @@ public class ListTimeTable {
     private boolean repetition = false; // Повторюваний розклад
     private boolean executable = false; //Виконався розклад чи ні
 
-    public ListTimeTable(int id, String weekDay, String time, String sizePortion, boolean repetition) {
-        this.id = id;
-        this.weekDay = weekDay;
-        this.time = time;
-        this.sizePortion = sizePortion;
-        this.repetition = repetition;
-    }
+
 
     public ListTimeTable(int id, String weekDay, String time, String sizePortion, boolean repetition, boolean executable) {
         this.id = id;
